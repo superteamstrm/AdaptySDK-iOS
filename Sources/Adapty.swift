@@ -50,7 +50,8 @@ public final class Adapty {
             _ = await PurchasePayloadStorage.removeAllUnfinishedTransactionState()
         }
 
-        if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, visionOS 1.0, *) {
+        if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, visionOS 1.0, *),
+           configuration.storeKitVersion == .v2 {
             self.receiptManager = StoreKitReceiptManager(
                 httpSession: httpSession,
                 refreshIfEmpty: false

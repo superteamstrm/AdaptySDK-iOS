@@ -37,7 +37,7 @@ extension Backend.Request {
         var headers = globalHeaders(configuration, environment)
         headers[sdkStoreHeaderKey] = Environment.StoreKit.name
         headers[isObserveModeHeaderKey] = configuration.observerMode ? "true" : "false"
-        headers[storeKit2EnabledHeaderKey] = Environment.StoreKit.storeKit2Enabled ? "enabled" : "unavailable"
+        headers[storeKit2EnabledHeaderKey] = configuration.storeKitVersion == .v2 ? "enabled" : "unavailable"
         return headers
     }
 

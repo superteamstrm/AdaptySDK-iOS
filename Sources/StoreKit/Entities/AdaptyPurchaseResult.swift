@@ -54,11 +54,11 @@ public enum AdaptyPurchaseResult: Sendable {
     /// A transaction object, which represents the payment.
     public var sk1Transaction: SKPaymentTransaction? {
         guard case let .success(_, transaction) = self,
-              let sk1Transaction = transaction as? SK1Transaction
+              let sk1Transaction = transaction as? SK1TransactionWithIdentifier
         else {
             return nil
         }
-        return sk1Transaction
+        return sk1Transaction.underlay
     }
 
     @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, visionOS 1.0, *)

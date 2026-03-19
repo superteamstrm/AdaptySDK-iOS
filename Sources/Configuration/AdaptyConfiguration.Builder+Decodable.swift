@@ -27,6 +27,8 @@ extension AdaptyConfiguration.Builder: Decodable {
         case crossPlatformSDKVersion = "cross_platform_sdk_version"
 
         case serverCluster = "server_cluster"
+        
+        case storeKitVersion = "store_kit_version"
     }
 
     public convenience init(from decoder: Decoder) throws {
@@ -65,7 +67,8 @@ extension AdaptyConfiguration.Builder: Decodable {
             transactionFinishBehavior: nil,
             logLevel: container.decodeIfPresent(AdaptyLog.Level.self, forKey: .logLevel),
             crossPlatformSDK: crossPlatformSDK,
-            urlProtocolClasses: nil
+            urlProtocolClasses: nil,
+            storeKitVersion: container.decodeIfPresent(StoreKitVersion.self, forKey: .storeKitVersion)
         )
     }
 }

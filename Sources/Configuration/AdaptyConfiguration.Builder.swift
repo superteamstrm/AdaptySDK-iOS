@@ -34,7 +34,8 @@ extension AdaptyConfiguration {
                 (name: $0.name.trimmed, version: $0.version.trimmed)
             },
             transactionFinishBehavior: builder.transactionFinishBehavior ?? defaultValue.transactionFinishBehavior,
-            clearDataOnBackup: builder.clearDataOnBackup ?? defaultValue.clearDataOnBackup
+            clearDataOnBackup: builder.clearDataOnBackup ?? defaultValue.clearDataOnBackup,
+            storeKitVersion: builder.storeKitVersion ?? .v2
         )
     }
 
@@ -54,7 +55,8 @@ extension AdaptyConfiguration {
             transactionFinishBehavior: nil,
             logLevel: nil,
             crossPlatformSDK: nil,
-            urlProtocolClasses: nil
+            urlProtocolClasses: nil,
+            storeKitVersion: nil
         )
     }
 }
@@ -80,7 +82,8 @@ public extension AdaptyConfiguration {
         public private(set) var logLevel: AdaptyLog.Level?
 
         package private(set) var crossPlatformSDK: (name: String, version: String)?
-
+        public private(set) var storeKitVersion: StoreKitVersion?
+        
         init(
             apiKey: String,
             customerUserId: String?,
@@ -96,7 +99,8 @@ public extension AdaptyConfiguration {
             transactionFinishBehavior: TransactionFinishBehavior?,
             logLevel: AdaptyLog.Level?,
             crossPlatformSDK: (name: String, version: String)?,
-            urlProtocolClasses: [AnyClass]?
+            urlProtocolClasses: [AnyClass]?,
+            storeKitVersion: StoreKitVersion?
         ) {
             self.apiKey = apiKey
             self.customerUserId = customerUserId
@@ -113,6 +117,7 @@ public extension AdaptyConfiguration {
             self.logLevel = logLevel
             self.crossPlatformSDK = crossPlatformSDK
             self.urlProtocolClasses = urlProtocolClasses
+            self.storeKitVersion = storeKitVersion
         }
 
         /// Call this method to get the ``AdaptyConfiguration`` object.
@@ -211,6 +216,12 @@ public extension AdaptyConfiguration.Builder {
     @discardableResult
     package func with(urlProtocolClasses classes: [AnyClass]) -> Self {
         urlProtocolClasses = classes
+        return self
+    }
+    
+    @discardableResult
+    func with(storeKitVersion version: StoreKitVersion) -> Self {
+        storeKitVersion = version
         return self
     }
 }
