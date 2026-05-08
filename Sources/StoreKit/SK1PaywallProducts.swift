@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import StoreKit
 
 private let log = Log.sk1ProductManager
 
@@ -152,46 +153,78 @@ extension Adapty {
         return offer
     }
 
-    private func getProfileState() -> (userId: AdaptyUserId, ineligibleProductIds: Set<String>)? {
-        guard let manager = profileManager else { return nil }
-
-        return (
-            manager.userId,
-            manager.backendIntroductoryOfferEligibilityStorage.getIneligibleProductIds()
-        )
-    }
-
     private func getIntroductoryOfferEligibility(vendorProductIds: [String]) async -> [String] {
-        guard let (userId, ineligibleProductIds) = getProfileState() else { return [] }
-
-        let vendorProductIds = vendorProductIds.filter { !ineligibleProductIds.contains($0) }
-        guard vendorProductIds.isNotEmpty else { return [] }
-
-        do {
-            try await syncTransactionHistory(for: userId)
-        } catch {
+        guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, visionOS 1.0, *) else {
             return []
         }
 
-        let lastResponse = try? profileManager(withProfileId: userId)?
-            .backendIntroductoryOfferEligibilityStorage
-            .getLastResponse()
-
+        let sk2Products: [SK2Product]
         do {
-            let response = try
-                await httpSession.fetchIntroductoryOfferEligibility(
-                    userId: userId,
-                    responseHash: lastResponse?.hash
-                )
-
-            if let manager = try? profileManager(withProfileId: userId) {
-                return manager.backendIntroductoryOfferEligibilityStorage.save(response)
-            } else {
-                return response.value.filter(\.value).map(\.vendorId)
-            }
-
+            sk2Products = try await SK2Product.products(for: vendorProductIds)
         } catch {
+            log.error("Can't fetch SK2Products for intro eligibility: \(error)")
             return []
+        }
+
+        return await withTaskGroup(of: String?.self) { group in
+            for product in sk2Products {
+                group.addTask {
+                    let eligible = await product.subscription?.isEligibleForIntroOffer ?? false
+                    return eligible ? product.id : nil
+                }
+            }
+            var result: [String] = []
+            for await id in group {
+                if let id { result.append(id) }
+            }
+            return result
         }
     }
+
+    /*
+     // Previous backend-based implementation:
+
+     private func getProfileState() -> (userId: AdaptyUserId, ineligibleProductIds: Set<String>)? {
+         guard let manager = profileManager else { return nil }
+
+         return (
+             manager.userId,
+             manager.backendIntroductoryOfferEligibilityStorage.getIneligibleProductIds()
+         )
+     }
+
+     private func getIntroductoryOfferEligibility(vendorProductIds: [String]) async -> [String] {
+         guard let (userId, ineligibleProductIds) = getProfileState() else { return [] }
+
+         let vendorProductIds = vendorProductIds.filter { !ineligibleProductIds.contains($0) }
+         guard vendorProductIds.isNotEmpty else { return [] }
+
+         do {
+             try await syncTransactionHistory(for: userId)
+         } catch {
+             return []
+         }
+
+         let lastResponse = try? profileManager(withProfileId: userId)?
+             .backendIntroductoryOfferEligibilityStorage
+             .getLastResponse()
+
+         do {
+             let response = try
+                 await httpSession.fetchIntroductoryOfferEligibility(
+                     userId: userId,
+                     responseHash: lastResponse?.hash
+                 )
+
+             if let manager = try? profileManager(withProfileId: userId) {
+                 return manager.backendIntroductoryOfferEligibilityStorage.save(response)
+             } else {
+                 return response.value.filter(\.value).map(\.vendorId)
+             }
+
+         } catch {
+             return []
+         }
+     }
+     */
 }
